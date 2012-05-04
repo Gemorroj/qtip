@@ -16,6 +16,10 @@
 * ---Raised the z-index to a higher maximum to prevent z-index conflicts
 * ---Added functionality so that unfocus can be used with other hide actions, i.e. unfocus and mouseout
 * ---Various IE fixes as well as jQuery 1.4.1 compatability updates.
+*
+*
+* ---Drop IE6 support
+* ---Code optimizations
 */
 (function($)
 {
