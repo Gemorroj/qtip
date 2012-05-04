@@ -35,7 +35,7 @@
 
    $.fn.qtip.preload = function(content)
    {
-      var images = [], i, src;
+      var images, i, src, $body = $(document.body);
 
       // If supplied content is a jQuery DOM array, grab it's inner HTML
       if(content.jquery && content.length > 0 && content.html) content = content.html();
@@ -55,7 +55,9 @@
 
              // Append new image to document body and preload the image off screen
             if(src && src.length > 1 && src[1])
-               $(document.body).append('<img src="'+src[1]+'" style="position: absolute; left: -10000em; " />');
+            {
+                $body.append('<img src="'+src[1]+'" style="position: absolute; left: -10000em;" alt="" />');
+            }
          }
       }
    };

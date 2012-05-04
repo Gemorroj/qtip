@@ -22,27 +22,33 @@
 	// Implementation
 	$.fn.qtip = function(options, blanket)
 	{
-		var i, id, interfaces, opts, obj, command, config, api;
+		var i, l, id, interfaces, opts, obj, command, config, api, $t = $(this);
 
 		// Return API / Interfaces if requested
-		if(typeof options == 'string')
+		if (typeof options === 'string')
 		{
 			// Make sure API data exists if requested
-			if($.isPlainObject($(this).data('qtip')))
+			if ($.isPlainObject($t.data('qtip')))
+            {
 				$.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.NO_TOOLTIP_PRESENT, false);
+            }
 
 			// Return requested object
-			if(options == 'api')
-				return $(this).data('qtip').interfaces[ $(this).data('qtip').current ];
-			else if(options == 'interfaces')
-				return $(this).data('qtip').interfaces;
+			if (options === 'api')
+            {
+				return $t.data('qtip').interfaces[ $t.data('qtip').current ];
+            }
+			else if (options === 'interfaces')
+            {
+				return $t.data('qtip').interfaces;
+            }
 		}
 
 		// Validate provided options
 		else
 		{
 			// Set null options object if no options are provided
-			if(!options) options = {};
+			if (!options) options = {};
 
 			// Sanitize option data
 			if(typeof options.content !== 'object' || (options.content.jquery && options.content.length > 0)) options.content = { text: options.content };
@@ -61,51 +67,63 @@
 			// Build main options object
 			opts = $.extend(true, {}, $.fn.qtip.defaults, options);
 
-			// Inherit all style properties into one syle object and include original options
+			// Inherit all style properties into one style object and include original options
 			opts.style = buildStyle.call({ options: opts }, opts.style);
 			opts.user = $.extend(true, {}, options);
-		};
+		}
 
 		// Iterate each matched element
-		return $(this).each(function() // Return original elements as per jQuery guidelines
+		return $t.each(function() // Return original elements as per jQuery guidelines
 		{
+            var $t = $(this);
 			// Check for API commands
-			if(typeof options == 'string')
+			if (typeof options === 'string')
 			{
 				command = options.toLowerCase();
-				interfaces = $(this).qtip('interfaces');
+				interfaces = $t.qtip('interfaces');
 
 				// Make sure API data exists$('.qtip').qtip('destroy')
-				if(typeof interfaces == 'object')
+				if (typeof interfaces === 'object')
 				{
 					// Check if API call is a BLANKET DESTROY command
-					if(blanket === true && command == 'destroy')
-						while(interfaces.length > 0) interfaces[interfaces.length-1].destroy();
+					if (blanket === true && command === 'destroy')
+                    {
+						while (interfaces.length > 0)
+                        {
+                            interfaces[interfaces.length - 1].destroy();
+                        }
+                    }
 
 					// API call is not a BLANKET DESTROY command
 					else
 					{
 						// Check if supplied command effects this tooltip only (NOT BLANKET)
-						if(blanket !== true) interfaces = [ $(this).qtip('api') ];
+						if (blanket !== true)
+                        {
+                            interfaces = [ $t.qtip('api') ];
+                        }
 
 						// Execute command on chosen qTips
-						for(i = 0; i < interfaces.length; i++)
+						for (i = 0, l = interfaces.length; i < l; i++)
 						{
 							// Destroy command doesn't require tooltip to be rendered
-							if(command == 'destroy') interfaces[i].destroy();
+							if (command === 'destroy')
+                            {
+                                interfaces[i].destroy();
+                            }
 
 							// Only call API if tooltip is rendered and it wasn't a destroy call
-							else if(interfaces[i].status.rendered === true)
+							else if (interfaces[i].status.rendered === true)
 							{
-								if(command == 'show') interfaces[i].show();
-								else if(command == 'hide') interfaces[i].hide();
-								else if(command == 'focus') interfaces[i].focus();
-								else if(command == 'disable') interfaces[i].disable(true);
-								else if(command == 'enable') interfaces[i].disable(false);
-							};
-						};
-					};
-				};
+								if(command === 'show') interfaces[i].show();
+								else if(command === 'hide') interfaces[i].hide();
+								else if(command === 'focus') interfaces[i].focus();
+								else if(command === 'disable') interfaces[i].disable(true);
+								else if(command === 'enable') interfaces[i].disable(false);
+							}
+						}
+                    }
+				}
 			}
 
 			// No API commands, continue with qTip creation
@@ -118,47 +136,56 @@
 
 				// Sanitize target options
 				if(config.position.container === false) config.position.container = $(document.body);
-				if(config.position.target === false) config.position.target = $(this);
-				if(config.show.when.target === false) config.show.when.target = $(this);
-				if(config.hide.when.target === false) config.hide.when.target = $(this);
+				if(config.position.target === false) config.position.target = $t;
+				if(config.show.when.target === false) config.show.when.target = $t;
+				if(config.hide.when.target === false) config.hide.when.target = $t;
 
 				// Determine tooltip ID (Reuse array slots if possible)
 				id = $.fn.qtip.interfaces.length;
-				for(i = 0; i < id; i++)
+				for (i = 0; i < id; i++)
 				{
-					if(typeof $(this).data('qtip') === 'object' && $(this).data('qtip'));
-				};
+                    if (typeof $.fn.qtip.interfaces[i] === 'undefined')
+                    {
+                        id = i;
+                        break;
+                    }
+				}
 
 				// Instantiate the tooltip
-				obj = new qTip($(this), config, id);
+				obj = new qTip($t, config, id);
 
 				// Add API references
 				$.fn.qtip.interfaces[id] = obj;
 
 				// Check if element already has qTip data assigned
-				if($.isPlainObject($(this).data('qtip')))
+				if ($.isPlainObject($t.data('qtip')))
 				{
 					// Set new current interface id
-					if(typeof $(this).attr('qtip') === 'undefined')
-						$(this).data('qtip').current = $(this).data('qtip').interfaces.length;
+					if (typeof $t.attr('qtip') === 'undefined')
+                    {
+                        $t.data('qtip').current = $t.data('qtip').interfaces.length;
+                    }
 
 					// Push new API interface onto interfaces array
-					$(this).data('qtip').interfaces.push(obj);
+                    $t.data('qtip').interfaces.push(obj);
 				}
 
 				// No qTip data is present, create now
-				else $(this).data('qtip', { current: 0, interfaces: [obj] });
+				else
+                {
+                    $t.data('qtip', { current: 0, interfaces: [obj] });
+                }
 
 				// If prerendering is disabled, create tooltip on showEvent
-				if(config.content.prerender === false && config.show.when.event !== false && config.show.ready !== true)
+				if (config.content.prerender === false && config.show.when.event !== false && config.show.ready !== true)
 				{
-					config.show.when.target.bind(config.show.when.event+'.qtip-'+id+'-create', { qtip: id }, function(event)
+					config.show.when.target.bind(config.show.when.event + '.qtip-' + id + '-create', { qtip: id }, function(event)
 					{
 						// Retrieve API interface via passed qTip Id
 						api = $.fn.qtip.interfaces[ event.data.qtip ];
 
 						// Unbind show event and cache mouse coords
-						api.options.show.when.target.unbind(api.options.show.when.event+'.qtip-'+event.data.qtip+'-create');
+						api.options.show.when.target.unbind(api.options.show.when.event + '.qtip-' + event.data.qtip + '-create');
 						api.cache.mouse = { x: event.pageX, y: event.pageY };
 
 						// Render tooltip and start the event sequence
@@ -179,7 +206,7 @@
 					// Construct the tooltip
 					construct.call(obj);
 				}
-			};
+			}
 		});
 	};
 
@@ -224,48 +251,83 @@
 				var returned, solo;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'show');
+                }
 
 				// Only continue if element is visible
-				if(self.elements.tooltip.css('display') !== 'none') return self;
+				if (self.elements.tooltip.css('display') !== 'none')
+                {
+                    return self;
+                }
 
 				// Clear animation queue
 				self.elements.tooltip.stop(true, false);
 
 				// Call API method and if return value is false, halt
 				returned = self.beforeShow.call(self, event);
-				if(returned === false) return self;
+				if (returned === false)
+                {
+                    return self;
+                }
 
 				// Define afterShow callback method
 				function afterShow()
 				{
-				$(this).css({ opacity: '' });
+				    $(this).css({ opacity: '' });
 					// Call API method and focus if it isn't static
-					if(self.options.position.type !== 'static') self.focus();
+					if (self.options.position.type !== 'static')
+                    {
+                        self.focus();
+                    }
 					self.onShow.call(self, event);
 
 					// Prevent antialias from disappearing in IE7 by removing filter attribute
-					if($.browser.msie) self.elements.tooltip.get(0).style.removeAttribute('filter');
-				};
+					if ($.browser.msie)
+                    {
+                        self.elements.tooltip.get(0).style.removeAttribute('filter');
+                    }
+				}
 
 				// Maintain toggle functionality if enabled
 				self.cache.toggle = 1;
 
 				// Update tooltip position if it isn't static
-				if(self.options.position.type !== 'static')
+				if (self.options.position.type !== 'static')
+                {
 					self.updatePosition(event, (self.options.show.effect.length > 0));
+                }
 
 				// Hide other tooltips if tooltip is solo
-				if(typeof self.options.show.solo == 'object') solo = $(self.options.show.solo);
-				else if(self.options.show.solo === true) solo = $('div.qtip').not(self.elements.tooltip);
-				if(solo) solo.each(function(){ if($(this).qtip('api').status.rendered === true) $(this).qtip('api').hide(); });
+				if (typeof self.options.show.solo === 'object')
+                {
+                    solo = $(self.options.show.solo);
+                }
+				else if (self.options.show.solo === true)
+                {
+                    solo = $('div.qtip').not(self.elements.tooltip);
+                }
+				if (solo)
+                {
+                    solo.each(function ()
+                    {
+                        if ($(this).qtip('api').status.rendered === true)
+                        {
+                            $(this).qtip('api').hide();
+                        }
+                    });
+                }
 
 				// Show tooltip
-				if(typeof self.options.show.effect.type == 'function')
+				if (typeof self.options.show.effect.type === 'function')
 				{
 					self.options.show.effect.type.call(self.elements.tooltip, self.options.show.effect.length);
-					self.elements.tooltip.queue(function(){ afterShow(); $(this).dequeue(); });
+					self.elements.tooltip.queue(function ()
+                    {
+                        afterShow();
+                        $(this).dequeue();
+                    });
 				}
 				else
 				{
@@ -278,7 +340,10 @@
 							self.elements.tooltip.slideDown(self.options.show.effect.length, function()
 							{
 								afterShow();
-								if(self.options.position.type !== 'static') self.updatePosition(event, true);
+								if (self.options.position.type !== 'static')
+                                {
+                                    self.updatePosition(event, true);
+                                }
 							});
 							break;
 						case 'grow':
@@ -288,11 +353,11 @@
 							self.elements.tooltip.show(null, afterShow);
 					self.elements.tooltip.css({ opacity: '' });
 							break;
-					};
+					}
 
 					// Add active class to tooltip
 					self.elements.tooltip.addClass(self.options.style.classes.active);
-				};
+				}
 
 				// Log event and return
 				return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_SHOWN, 'show');
@@ -303,11 +368,16 @@
 				var returned;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'hide');
+                }
 
 				// Only continue if element is visible
-				else if(self.elements.tooltip.css('display') === 'none') return self;
+				else if (self.elements.tooltip.css('display') === 'none')
+                {
+                    return self;
+                }
 
 				// Stop show timer and animation queue
 				clearTimeout(self.timers.show);
@@ -315,19 +385,29 @@
 
 				// Call API method and if return value is false, halt
 				returned = self.beforeHide.call(self, event);
-				if(returned === false) return self;
+				if (returned === false)
+                {
+                    return self;
+                }
 
 				// Define afterHide callback method
-				function afterHide(){ self.onHide.call(self, event); };
+				function afterHide()
+                {
+                    self.onHide.call(self, event);
+                }
 
 				// Maintain toggle functionality if enabled
 				self.cache.toggle = 0;
 
 				// Hide tooltip
-				if(typeof self.options.hide.effect.type == 'function')
+				if (typeof self.options.hide.effect.type === 'function')
 				{
 					self.options.hide.effect.type.call(self.elements.tooltip, self.options.hide.effect.length);
-					self.elements.tooltip.queue(function(){ afterHide(); $(this).dequeue(); });
+					self.elements.tooltip.queue(function ()
+                    {
+                        afterHide();
+                        $(this).dequeue();
+                    });
 				}
 				else
 				{
@@ -345,11 +425,11 @@
 						default:
 							self.elements.tooltip.hide(null, afterHide);
 							break;
-					};
+					}
 
 					// Remove active class to tooltip
 					self.elements.tooltip.removeClass(self.options.style.classes.active);
-				};
+				}
 
 				// Log event and return
 				return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_HIDDEN, 'hide');
@@ -357,15 +437,19 @@
 
 			updatePosition: function(event, animate)
 			{
-				var i, target, tooltip, coords, mapName, imagePos, newPosition, ieAdjust, ie6Adjust, borderAdjust, mouseAdjust, offset, curPosition, returned
+				var i, l, target, tooltip, coords, mapName, imagePos, newPosition, ieAdjust, mouseAdjust, curPosition, returned;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'updatePosition');
+                }
 
 				// If tooltip is static, return
-				else if(self.options.position.type == 'static')
-					return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.CANNOT_POSITION_STATIC, 'updatePosition');
+				else if (self.options.position.type === 'static')
+                {
+                    return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.CANNOT_POSITION_STATIC, 'updatePosition');
+                }
 
 				// Define property objects
 				target = {
@@ -380,18 +464,21 @@
 				};
 
 				// Target is an HTML element
-				if(self.options.position.target !== 'mouse')
+				if (self.options.position.target !== 'mouse')
 				{
 					// If the HTML element is AREA, calculate position manually
-					if(self.options.position.target.get(0).nodeName.toLowerCase() == 'area')
+					if(self.options.position.target.get(0).nodeName.toLowerCase() === 'area')
 					{
 						// Retrieve coordinates from coords attribute and parse into integers
 						coords = self.options.position.target.attr('coords').split(',');
-						for(i = 0; i < coords.length; i++) coords[i] = parseInt(coords[i]);
+						for (i = 0, l = coords.length; i < l; i++)
+                        {
+                            coords[i] = parseInt(coords[i], 10);
+                        }
 
 						// Setup target position object
 						mapName = self.options.position.target.parent('map').attr('name');
-						imagePos = $('img[usemap="#'+mapName+'"]:first').offset();
+						imagePos = $('img[usemap="#' + mapName + '"]:first').offset();
 						target.position = {
 							left: Math.floor(imagePos.left + coords[0]),
 							top: Math.floor(imagePos.top + coords[1])
@@ -420,23 +507,31 @@
 									height: coords[1]
 								};
 
-								for(i = 0; i < coords.length; i++)
+								for(i = 0, l = coords.length; i < l; i++)
 								{
-									if(i % 2 == 0)
+									if (i % 2 === 0)
 									{
-										if(coords[i] > target.dimensions.width)
+										if (coords[i] > target.dimensions.width)
+                                        {
 											target.dimensions.width = coords[i];
-										if(coords[i] < coords[0])
+                                        }
+										if (coords[i] < coords[0])
+                                        {
 											target.position.left = Math.floor(imagePos.left + coords[i]);
+                                        }
 									}
 									else
 									{
-										if(coords[i] > target.dimensions.height)
+										if (coords[i] > target.dimensions.height)
+                                        {
 											target.dimensions.height = coords[i];
-										if(coords[i] < coords[1])
+                                        }
+										if (coords[i] < coords[1])
+                                        {
 											target.position.top = Math.floor(imagePos.top + coords[i]);
-									};
-								};
+                                        }
+									}
+								}
 
 								target.dimensions.width = target.dimensions.width - (target.position.left - imagePos.left);
 								target.dimensions.height = target.dimensions.height - (target.position.top - imagePos.top);
@@ -445,7 +540,7 @@
 							default:
 								return $.fn.qtip.log.error.call(self, 4, $.fn.qtip.constants.INVALID_AREA_SHAPE, 'updatePosition');
 								break;
-						};
+						}
 
 						// Adjust position by 2 pixels (Positioning bug?)
 						target.dimensions.width -= 2; target.dimensions.height -= 2;
@@ -462,31 +557,43 @@
 					else
 					{
 						// Check if the target is another tooltip. If its animated, retrieve position from newPosition data
-						if(typeof self.options.position.target.attr('qtip') !== 'undefined')
+						if (typeof self.options.position.target.attr('qtip') !== 'undefined')
+                        {
 							target.position = self.options.position.target.qtip('api').cache.position;
+                        }
 						else
+                        {
 							target.position = self.options.position.target.offset();
+                        }
 
 						// Setup dimensions objects
 						target.dimensions = {
 							height: self.options.position.target.outerHeight(),
 							width: self.options.position.target.outerWidth()
 						};
-					};
+					}
 
 					// Calculate correct target corner position
 					newPosition = $.extend({}, target.position);
-					if((/right/i).test(target.corner))
+					if ((/right/i).test(target.corner))
+                    {
 						newPosition.left += target.dimensions.width;
+                    }
 
-					if((/bottom/i).test(target.corner))
+					if ((/bottom/i).test(target.corner))
+                    {
 						newPosition.top += target.dimensions.height;
+                    }
 
-					if((/((top|bottom)Middle)|center/).test(target.corner))
+					if ((/((top|bottom)Middle)|center/).test(target.corner))
+                    {
 						newPosition.left += (target.dimensions.width / 2);
+                    }
 
-					if((/((left|right)Middle)|center/).test(target.corner))
+					if ((/((left|right)Middle)|center/).test(target.corner))
+                    {
 						newPosition.top += (target.dimensions.height / 2);
+                    }
 				}
 
 				// Mouse is the target, set position to current mouse coordinates
@@ -495,86 +602,100 @@
 					// Setup target position and dimensions objects
 					target.position = newPosition = { left: self.cache.mouse.x, top: self.cache.mouse.y };
 					target.dimensions = { height: 1, width: 1 };
-				};
+				}
 
 				// Calculate correct target corner position
-				if((/right/i).test(tooltip.corner))
+				if ((/right/i).test(tooltip.corner))
+                {
 					newPosition.left -= tooltip.dimensions.width;
+                }
 
-				if((/bottom/i).test(tooltip.corner))
+				if ((/bottom/i).test(tooltip.corner))
+                {
 					newPosition.top -= tooltip.dimensions.height;
+                }
 
-				if((/((top|bottom)Middle)|center/).test(tooltip.corner))
+				if ((/((top|bottom)Middle)|center/).test(tooltip.corner))
+                {
 					newPosition.left -= (tooltip.dimensions.width / 2);
+                }
 
-				if((/((left|right)Middle)|center/).test(tooltip.corner))
+				if ((/((left|right)Middle)|center/).test(tooltip.corner))
+                {
 					newPosition.top -= (tooltip.dimensions.height / 2);
+                }
 
 				// Setup IE adjustment variables (Pixel gap bugs)
 				ieAdjust = ($.browser.msie) ? 1 : 0; // And this is why I hate IE...
-				ie6Adjust = ($.browser.msie && parseInt($.browser.version.charAt(0)) === 6) ? 1 : 0; // ...and even more so IE6!
 
 				// Adjust for border radius
 				if(self.options.style.border.radius > 0)
 				{
-					if((/Left/i).test(tooltip.corner))
+					if ((/Left/i).test(tooltip.corner))
+                    {
 						newPosition.left -= self.options.style.border.radius;
-					else if((/Right/i).test(tooltip.corner))
+                    }
+					else if ((/Right/i).test(tooltip.corner))
+                    {
 						newPosition.left += self.options.style.border.radius;
+                    }
 
-					if((/Top/i).test(tooltip.corner))
+					if ((/Top/i).test(tooltip.corner))
+                    {
 						newPosition.top -= self.options.style.border.radius;
-					else if((/Bottom/i).test(tooltip.corner))
+                    }
+					else if ((/Bottom/i).test(tooltip.corner))
+                    {
 						newPosition.top += self.options.style.border.radius;
-				};
+                    }
+				}
 
 				// IE only adjustments (Pixel perfect!)
 				if(ieAdjust)
 				{
-					if((/top/i).test(tooltip.corner))
-						newPosition.top -= ieAdjust
-					else if((/bottom/i).test(tooltip.corner))
-						newPosition.top += ieAdjust
+					if ((/top/i).test(tooltip.corner))
+                    {
+						newPosition.top -= ieAdjust;
+                    }
+					else if ((/bottom/i).test(tooltip.corner))
+                    {
+						newPosition.top += ieAdjust;
+                    }
 
-					if((/left/i).test(tooltip.corner))
-						newPosition.left -= ieAdjust
-					else if((/right/i).test(tooltip.corner))
-						newPosition.left += ieAdjust
+					if ((/left/i).test(tooltip.corner)) {
+						newPosition.left -= ieAdjust;
+                    }
+					else if ((/right/i).test(tooltip.corner))
+                    {
+						newPosition.left += ieAdjust;
+                    }
 
-					if((/leftMiddle|rightMiddle/).test(tooltip.corner))
-						newPosition.top -= 1
-				};
+					if ((/leftMiddle|rightMiddle/).test(tooltip.corner)) {
+						newPosition.top -= 1;
+                    }
+				}
 
 				// If screen adjustment is enabled, apply adjustments
-				if(self.options.position.adjust.screen === true)
+				if (self.options.position.adjust.screen === true)
+                {
 					newPosition = screenAdjust.call(self, newPosition, target, tooltip);
+                }
 
 				// If mouse is the target, prevent tooltip appearing directly under the mouse
 				if(self.options.position.target === 'mouse' && self.options.position.adjust.mouse === true)
 				{
-					if(self.options.position.adjust.screen === true && self.elements.tip)
+					if (self.options.position.adjust.screen === true && self.elements.tip)
+                    {
 						mouseAdjust = self.elements.tip.attr('rel');
+                    }
 					else
+                    {
 						mouseAdjust = self.options.position.corner.tooltip;
+                    }
 
 					newPosition.left += ((/right/i).test(mouseAdjust)) ? -6 : 6;
 					newPosition.top += ((/bottom/i).test(mouseAdjust)) ? -6 : 6;
 				}
-
-				// Initiate bgiframe plugin in IE6 if tooltip overlaps a select box or object element
-				if(!self.elements.bgiframe && $.browser.msie && parseInt($.browser.version.charAt(0)) == 6)
-				{
-					$('select, object').each(function()
-					{
-						offset = $(this).offset();
-						offset.bottom = offset.top + $(this).height();
-						offset.right = offset.left + $(this).width();
-
-						if(newPosition.top + tooltip.dimensions.height >= offset.top
-						&& newPosition.left + tooltip.dimensions.width >= offset.left)
-							bgiframe.call(self);
-					});
-				};
 
 				// Add user xy adjustments
 				newPosition.left += self.options.position.adjust.x;
@@ -592,23 +713,31 @@
 					self.cache.position = newPosition;
 
 					// Check if animation is enabled
-					if(animate === true)
+					if (animate === true)
 					{
 						// Set animated status
 						self.status.animated = true;
 
 						// Animate and reset animated status on animation end
-						self.elements.tooltip.animate(newPosition, 200, 'swing', function(){ self.status.animated = false });
+						self.elements.tooltip.animate(newPosition, 200, 'swing', function ()
+                        {
+                            self.status.animated = false;
+                        });
 					}
 
 					// Set new position via CSS
-					else self.elements.tooltip.css(newPosition);
+					else
+                    {
+                        self.elements.tooltip.css(newPosition);
+                    }
 
 					// Call API method and log event if its not a mouse move
 					self.onPositionUpdate.call(self, event);
-					if(typeof event !== 'undefined' && event.type && event.type !== 'mousemove')
+					if (typeof event !== 'undefined' && event.type && event.type !== 'mousemove')
+                    {
 						$.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_POSITION_UPDATED, 'updatePosition');
-				};
+                    }
+				}
 
 				return self;
 			},
@@ -616,17 +745,20 @@
 			updateWidth: function(newWidth)
 			{
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'updateWidth');
+                }
 
 				// Make sure supplied width is a number and if not, return
-				else if(newWidth != undefined && typeof newWidth !== 'number')
+				else if (typeof newWidth !== 'undefined' && typeof newWidth !== 'number')
+                {
 					return $.fn.qtip.log.error.call(self, 2, 'newWidth must be of type number', 'updateWidth');
+                }
 
 				// Setup elements which must be hidden during width update
 				var hidden = self.elements.contentWrapper.siblings().add(self.elements.tip).add(self.elements.button),
 					zoom = self.elements.wrapper.add(self.elements.contentWrapper.children()),
-					tooltip = self.elements.tooltip,
 					max = self.options.style.width.max,
 					min = self.options.style.width.min;
 
@@ -634,7 +766,8 @@
 				if(!newWidth)
 				{
 					// Explicit width is set
-					if(typeof self.options.style.width.value === 'number'){
+					if (typeof self.options.style.width.value === 'number')
+                    {
 						newWidth = self.options.style.width.value;
 					}
 
@@ -646,7 +779,8 @@
 						hidden.hide();
 
 						// Set position and zoom to defaults to prevent IE hasLayout bug
-						if($.browser.msie){
+						if ($.browser.msie)
+                        {
 							zoom.css({ zoom: '' });
 						}
 
@@ -654,26 +788,31 @@
 						newWidth = self.getDimensions().width;
 
 						// Make sure its within the maximum and minimum width boundries
-						if(!self.options.style.width.value) {
+						if (!self.options.style.width.value)
+                        {
 							newWidth = Math.min( Math.max(newWidth, min), max );
 						}
 					}
 				}
 
 				// Adjust newWidth by 1px if width is odd (IE6 rounding bug fix)
-				if(newWidth % 2){ newWidth -= 1; }
+				if (newWidth % 2)
+                {
+                    newWidth -= 1;
+                }
 
 				// Set the new calculated width and unhide other elements
 				self.elements.tooltip.width(newWidth);
 				hidden.show();
 
 				// Set the border width, if enabled
-				if(self.options.style.border.radius)
+				if (self.options.style.border.radius)
 				{
-					self.elements.tooltip.find('.qtip-betweenCorners').each(function(i){
+					self.elements.tooltip.find('.qtip-betweenCorners').each(function ()
+                    {
 						$(this).width(newWidth - (self.options.style.border.radius * 2));
-					})
-				};
+					});
+				}
 
 				// IE only adjustments
 				if($.browser.msie)
@@ -682,8 +821,11 @@
 					zoom.css({ zoom: 1 });
 
 					// Adjust BGIframe height and width if enabled
-					if(self.elements.bgiframe) self.elements.bgiframe.width(newWidth).height(self.getDimensions.height);
-				};
+					if (self.elements.bgiframe)
+                    {
+                        self.elements.bgiframe.width(newWidth).height(self.getDimensions.height);
+                    }
+				}
 
 				// Log event and return
 				return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_WIDTH_UPDATED, 'updateWidth');
@@ -694,20 +836,26 @@
 				var tip, borders, context, corner, coordinates;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'updateStyle');
+                }
 
 				// Return if style is not defined or name is not a string
-				else if(typeof name !== 'string' || !$.fn.qtip.styles[name])
+				else if (typeof name !== 'string' || !$.fn.qtip.styles[name])
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.STYLE_NOT_DEFINED, 'updateStyle');
+                }
 
 				// Set the new style object
 				self.options.style = buildStyle.call(self, $.fn.qtip.styles[name], self.options.user.style);
 
 				// Update initial styles of content and title elements
 				self.elements.content.css( jQueryStyle(self.options.style) );
-				if(self.options.content.title.text !== false)
+				if (self.options.content.title.text !== false)
+                {
 					self.elements.title.css( jQueryStyle(self.options.style.title, true) );
+                }
 
 				// Update CSS border colour
 				self.elements.contentWrapper.css({ borderColor: self.options.style.border.color });
@@ -720,7 +868,7 @@
 						// Retrieve canvas context and clear
 						tip = self.elements.tooltip.find('.qtip-tip canvas:first');
 						context = tip.get(0).getContext('2d');
-						context.clearRect(0,0,300,300);
+						context.clearRect(0, 0, 300, 300);
 
 						// Draw new tip
 						corner = tip.parent('div[rel]:first').attr('rel');
@@ -732,8 +880,8 @@
 						// Set new fillcolor attribute
 						tip = self.elements.tooltip.find('.qtip-tip [nodeName="shape"]');
 						tip.attr('fillcolor', self.options.style.tip.color || self.options.style.border.color);
-					};
-				};
+					}
+				}
 
 				// Update border colors if enabled
 				if(self.options.style.border.radius > 0)
@@ -742,17 +890,16 @@
 
 					if($('<canvas>').get(0).getContext)
 					{
-						borders = calculateBorders(self.options.style.border.radius)
+						borders = calculateBorders(self.options.style.border.radius);
 						self.elements.tooltip.find('.qtip-wrapper canvas').each(function()
 						{
 							// Retrieve canvas context and clear
 							context = $(this).get(0).getContext('2d');
-							context.clearRect(0,0,300,300);
+							context.clearRect(0, 0, 300, 300);
 
 							// Draw new border
-							corner = $(this).parent('div[rel]:first').attr('rel')
-							drawBorder.call(self, $(this), borders[corner],
-								self.options.style.border.radius, self.options.style.border.color);
+							corner = $(this).parent('div[rel]:first').attr('rel');
+							drawBorder.call(self, $(this), borders[corner], self.options.style.border.radius, self.options.style.border.color);
 						});
 					}
 					else if($.browser.msie)
@@ -760,10 +907,10 @@
 						// Set new fillcolor attribute on each border corner
 						self.elements.tooltip.find('.qtip-wrapper [nodeName="arc"]').each(function()
 						{
-							$(this).attr('fillcolor', self.options.style.border.color)
+							$(this).attr('fillcolor', self.options.style.border.color);
 						});
-					};
-				};
+					}
+				}
 
 				// Log event and return
 				return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_STYLE_UPDATED, 'updateStyle');
@@ -774,24 +921,39 @@
 				var parsedContent, images, loadedImages;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'updateContent');
+                }
 
 				// Make sure content is defined before update
-				else if(!content)
+				else if (!content)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.NO_CONTENT_PROVIDED, 'updateContent');
+                }
 
 				// Call API method and set new content if a string is returned
 				parsedContent = self.beforeContentUpdate.call(self, content);
-				if(typeof parsedContent == 'string') content = parsedContent;
-				else if(parsedContent === false) return;
+				if (typeof parsedContent === 'string')
+                {
+                    content = parsedContent;
+                }
+				else if (parsedContent === false)
+                {
+                    return;
+                }
 
 				// Set position and zoom to defaults to prevent IE hasLayout bug
-				if($.browser.msie) self.elements.contentWrapper.children().css({ zoom: 'normal' });
+				if ($.browser.msie)
+                {
+                    self.elements.contentWrapper.children().css({ zoom: 'normal' });
+                }
 
 				// Append new content if its a DOM array and show it if hidden
-				if(content.jquery && content.length > 0)
+				if (content.jquery && content.length > 0)
+                {
 					content.clone(true).appendTo(self.elements.content).show();
+                }
 
 				// Content is a regular string, insert the new content
 				else self.elements.content.html(content);
@@ -807,18 +969,33 @@
 						images.each(function()
 						{
 							// Use preloaded image dimensions to prevent incorrect positioning
-							preloaded = $('body > img[src="'+$(this).attr('src')+'"]:first');
-							if(preloaded.length > 0) $(this).attr('width', preloaded.innerWidth()).attr('height', preloaded.innerHeight());
+							var preloaded = $('body > img[src="' + $(this).attr('src') + '"]:first');
+							if (preloaded.length > 0)
+                            {
+                                $(this).attr('width', preloaded.innerWidth()).attr('height', preloaded.innerHeight());
+                            }
 						});
 						afterLoad();
 					}
 
 					// Make sure all iamges are loaded before proceeding with position update
-					else images.bind('load error', function() { if(++loadedImages === images.length) afterLoad(); });
+					else
+                    {
+                        images.bind('load error', function ()
+                        {
+                            if (++loadedImages === images.length)
+                            {
+                                afterLoad();
+                            }
+                        });
+                    }
 				}
-	            else afterLoad();
-				
-				
+	            else
+                {
+                    afterLoad();
+                }
+
+
 				function afterLoad(){
                	// Update the tooltip width
 	               self.updateWidth();
@@ -827,14 +1004,18 @@
 	               if(reposition !== false)
 	               {
 	                  // Update position if tooltip isn't static
-	                  if(self.options.position.type !== 'static')
+	                  if (self.options.position.type !== 'static')
+                      {
 	                     self.updatePosition(self.elements.tooltip.is(':visible'), true);
+                      }
 
 	                  // Reposition the tip if enabled
-	                  if(self.options.style.tip.corner !== false)
+	                  if (self.options.style.tip.corner !== false)
+                      {
 	                     positionTip.call(self);
-	               };
-	            };
+                      }
+	               }
+	            }
 
 				// Update the tooltip width
 				self.updateWidth();
@@ -844,12 +1025,16 @@
 				{
 					// Update position if tooltip isn't static
 					if(self.options.position.type !== 'static')
+                    {
 						self.updatePosition(self.elements.tooltip.is(':visible'), true);
+                    }
 
 					// Reposition the tip if enabled
-					if(self.options.style.tip.corner !== false)
+					if (self.options.style.tip.corner !== false)
+                    {
 						positionTip.call(self);
-				};
+                    }
+				}
 
 				// Call API method and log event
 				self.onContentUpdate.call(self);
@@ -861,18 +1046,24 @@
 				var returned;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'loadContent');
+                }
 
 				// Call API method and if return value is false, halt
 				returned = self.beforeContentLoad.call(self);
 				if(returned === false) return self;
 
 				// Load content using specified request type
-				if(method == 'post')
+				if(method === 'post')
+                {
 					$.post(url, data, setupContent);
+                }
 				else
+                {
 					$.get(url, data, setupContent);
+                }
 
 				function setupContent(content)
 				{
@@ -882,7 +1073,7 @@
 
 					// Update the content
 					self.updateContent(content);
-				};
+				}
 
 				return self;
 			},
@@ -891,20 +1082,30 @@
 			{
 				// Make sure tooltip is rendered and if not, return
 				if(!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'updateTitle');
+                }
 
 				// Make sure content is defined before update
 				else if(!content)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.NO_CONTENT_PROVIDED, 'updateTitle');
+                }
 
 				// Call API method and if return value is false, halt
-				returned = self.beforeTitleUpdate.call(self);
-				if(returned === false) return self;
+				if(self.beforeTitleUpdate.call(self) === false) return self;
 
 				// Set the new content and reappend the button if enabled
-				if(self.elements.button) self.elements.button = self.elements.button.clone(true);
-				self.elements.title.html(content)
-				if(self.elements.button) self.elements.title.prepend(self.elements.button);
+				if
+                    (self.elements.button)
+                {
+                    self.elements.button = self.elements.button.clone(true);
+                }
+				self.elements.title.html(content);
+				if (self.elements.button)
+                {
+                    self.elements.title.prepend(self.elements.button);
+                }
 
 				// Call API method and log event
 				self.onTitleUpdate.call(self);
@@ -917,13 +1118,16 @@
 
 				// Make sure tooltip is rendered and if not, return
 				if(!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'focus');
-
-				else if(self.options.position.type == 'static')
+                }
+				else if (self.options.position.type === 'static')
+                {
 					return $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.CANNOT_FOCUS_STATIC, 'focus');
+                }
 
 				// Set z-index variables
-				curIndex = parseInt( self.elements.tooltip.css('z-index') );
+				curIndex = parseInt( self.elements.tooltip.css('z-index'), 10 );
 				newIndex = 32001 + $('div.qtip[qtip]').length - 1;
 
 				// Only update the z-index if it has changed and tooltip is not already focused
@@ -934,20 +1138,22 @@
 					if(returned === false) return self;
 
 					// Loop through all other tooltips
-					$('div.qtip[qtip]').not(self.elements.tooltip).each(function()
+					$('div.qtip[qtip]').not(self.elements.tooltip).each(function ()
 					{
 						if($(this).qtip('api').status.rendered === true)
 						{
-							elemIndex = parseInt($(this).css('z-index'));
+							elemIndex = parseInt($(this).css('z-index'), 10);
 
 							// Reduce all other tooltip z-index by 1
-							if(typeof elemIndex == 'number' && elemIndex > -1)
-								$(this).css({ zIndex: parseInt( $(this).css('z-index') ) - 1 });
+							if (typeof elemIndex === 'number' && elemIndex > -1)
+                            {
+								$(this).css({ zIndex: parseInt( $(this).css('z-index'), 10 ) - 1 });
+                            }
 
 							// Set focused status to false
 							$(this).qtip('api').status.focused = false;
 						}
-					})
+					});
 
 					// Set the new z-index and set focus status to true
 					self.elements.tooltip.css({ zIndex: newIndex });
@@ -956,7 +1162,7 @@
 					// Call API method and log event
 					self.onFocus.call(self, event);
 					$.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_FOCUSED, 'focus');
-				};
+				}
 
 				return self;
 			},
@@ -965,7 +1171,9 @@
 			{
 				// Make sure tooltip is rendered and if not, return
 				if(!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'disable');
+                }
 
 				if(state)
 				{
@@ -978,7 +1186,10 @@
 					}
 
 					// Tooltip is already disabled, inform user via log
-					else  $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.TOOLTIP_ALREADY_DISABLED, 'disable');
+					else
+                    {
+                        $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.TOOLTIP_ALREADY_DISABLED, 'disable');
+                    }
 				}
 				else
 				{
@@ -991,15 +1202,18 @@
 					}
 
 					// Tooltip is already enabled, inform the user via log
-					else $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.TOOLTIP_ALREADY_ENABLED, 'disable');
-				};
+					else
+                    {
+                        $.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.TOOLTIP_ALREADY_ENABLED, 'disable');
+                    }
+				}
 
 				return self;
 			},
 
 			destroy: function()
 			{
-				var i, returned, interfaces;
+				var i, l, returned, interfaces;
 
 				// Call API method and if return value is false, halt
 				returned = self.beforeDestroy.call(self);
@@ -1019,27 +1233,37 @@
 				}
 
 				// Tooltip isn't yet rendered, remove render event
-				else self.options.show.when.target.unbind(self.options.show.when.event+'.qtip-create');
+				else
+                {
+                    self.options.show.when.target.unbind(self.options.show.when.event+'.qtip-create');
+                }
 
 				// Check to make sure qTip data is present on target element
-				if(typeof self.elements.target.data('qtip') == 'object')
+				if(typeof self.elements.target.data('qtip') === 'object')
 				{
 					// Remove API references from interfaces object
 					interfaces = self.elements.target.data('qtip').interfaces;
-					if(typeof interfaces == 'object' && interfaces.length > 0)
+					if(typeof interfaces === 'object' && interfaces.length > 0)
 					{
 						// Remove API from interfaces array
-						for(i = 0; i < interfaces.length - 1; i++)
-							if(interfaces[i].id == self.id) interfaces.splice(i, 1)
+						for (i = 0, l = interfaces.length - 1; i < l; i++)
+							if (interfaces[i].id == self.id)
+                            {
+                                interfaces.splice(i, 1)
+                            }
 					}
 				}
 				$.fn.qtip.interfaces.splice(self.id, 1);
 
 				// Set qTip current id to previous tooltips API if available
-				if(typeof interfaces == 'object' && interfaces.length > 0)
+				if(typeof interfaces === 'object' && interfaces.length > 0)
+                {
 					self.elements.target.data('qtip').current = interfaces.length -1;
+                }
 				else
+                {
 					self.elements.target.removeData('qtip');
+                }
 
 				// Call API method and log destroy
 				self.onDestroy.call(self);
@@ -1054,14 +1278,22 @@
 
 				// Make sure tooltip is rendered and if not, return
 				if(!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'getPosition');
+                }
 
-				show = (self.elements.tooltip.css('display') !== 'none') ? false : true;
+				show = (self.elements.tooltip.css('display') === 'none');
 
 				// Show and hide tooltip to make sure coordinates are returned
-				if(show) self.elements.tooltip.css({ visiblity: 'hidden' }).show();
+				if(show)
+                {
+                    self.elements.tooltip.css({ visiblity: 'hidden' }).show();
+                }
 				offset = self.elements.tooltip.offset();
-				if(show) self.elements.tooltip.css({ visiblity: 'visible' }).hide();
+				if(show)
+                {
+                    self.elements.tooltip.css({ visiblity: 'visible' }).hide();
+                }
 
 				return offset;
 			},
@@ -1071,28 +1303,36 @@
 				var show, dimensions;
 
 				// Make sure tooltip is rendered and if not, return
-				if(!self.status.rendered)
+				if (!self.status.rendered)
+                {
 					return $.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.TOOLTIP_NOT_RENDERED, 'getDimensions');
+                }
 
-				show = (!self.elements.tooltip.is(':visible')) ? true : false;
+				show = (self.elements.tooltip.is(':visible'));
 
 				// Show and hide tooltip to make sure dimensions are returned
-				if(show) self.elements.tooltip.css({ visiblity: 'hidden' }).show();
+				if(show)
+                {
+                    self.elements.tooltip.css({ visiblity: 'hidden' }).show();
+                }
 				dimensions = {
 					height: self.elements.tooltip.outerHeight(),
 					width: self.elements.tooltip.outerWidth()
 				};
-				if(show) self.elements.tooltip.css({ visiblity: 'visible' }).hide();
+				if(show)
+                {
+                    self.elements.tooltip.css({ visiblity: 'visible' }).hide();
+                }
 
 				return dimensions;
 			}
 		});
-	};
+	}
 
 	// Define priamry construct function
 	function construct()
 	{
-		var self, adjust, content, url, data, method, tempLength;
+		var self, content, url, data, method;
 		self = this;
 
 		// Call API method
@@ -1102,9 +1342,9 @@
 		self.status.rendered = true;
 
 		// Create initial tooltip elements
-		self.elements.tooltip =  '<div qtip="'+self.id+'" ' +
+		self.elements.tooltip =  '<div qtip="' + self.id + '" ' +
 			'class="qtip '+(self.options.style.classes.tooltip || self.options.style)+'"' +
-			'style="display:none; -moz-border-radius:0; -webkit-border-radius:0; border-radius:0;' +
+			'style="display:none; -o-border-radius:0; -moz-border-radius:0; -webkit-border-radius:0; border-radius:0;' +
 			'position:'+self.options.position.type+';">' +
 			'  <div class="qtip-wrapper" style="position:relative; overflow:hidden; text-align:left;">' +
 			'    <div class="qtip-contentWrapper" style="overflow:hidden;">' +
@@ -1113,7 +1353,7 @@
 
 		// Append to container element
 		self.elements.tooltip = $(self.elements.tooltip);
-		self.elements.tooltip.appendTo(self.options.position.container)
+		self.elements.tooltip.appendTo(self.options.position.container);
 
 		// Setup tooltip qTip data
 		self.elements.tooltip.data('qtip', { current: 0, interfaces: [self] });
@@ -1124,26 +1364,41 @@
 		self.elements.content = self.elements.contentWrapper.children('div:first').css( jQueryStyle(self.options.style) );
 
 		// Apply IE hasLayout fix to wrapper and content elements
-		if($.browser.msie) self.elements.wrapper.add(self.elements.content).css({ zoom: 1 });
+		if($.browser.msie)
+        {
+            self.elements.wrapper.add(self.elements.content).css({ zoom: 1 });
+        }
 
 		// Setup tooltip attributes
-		if((/unfocus/i).test(self.options.hide.when.event)) self.elements.tooltip.attr('unfocus', true);
+		if ((/unfocus/i).test(self.options.hide.when.event))
+        {
+            self.elements.tooltip.attr('unfocus', true);
+        }
 
 		// If an explicit width is set, updateWidth prior to setting content to prevent dirty rendering
-		if(typeof self.options.style.width.value == 'number') self.updateWidth();
+		if (typeof self.options.style.width.value === 'number')
+        {
+            self.updateWidth();
+        }
 
 		// Create borders and tips if supported by the browser
-		if($('<canvas>').get(0).getContext || $.browser.msie)
+		if ($('<canvas>').get(0).getContext || $.browser.msie)
 		{
 			// Create border
-			if(self.options.style.border.radius > 0)
-				createBorder.call(self);
+			if (self.options.style.border.radius > 0)
+            {
+                createBorder.call(self);
+            }
 			else
-				self.elements.contentWrapper.css({ border: self.options.style.border.width+'px solid '+self.options.style.border.color  });
+            {
+                self.elements.contentWrapper.css({ border: self.options.style.border.width+'px solid '+self.options.style.border.color  });
+            }
 
 			// Create tip if enabled
 			if(self.options.style.tip.corner !== false)
-				createTip.call(self);
+            {
+                createTip.call(self);
+            }
 		}
 
 		// Neither canvas or VML is supported, tips and borders cannot be drawn!
@@ -1158,22 +1413,24 @@
 
 			// Inform via log
 			$.fn.qtip.log.error.call(self, 2, $.fn.qtip.constants.CANVAS_VML_NOT_SUPPORTED, 'render');
-		};
+		}
 
 		// Use the provided content string or DOM array
-		if((typeof self.options.content.text == 'string' && self.options.content.text.length > 0)
+		if((typeof self.options.content.text === 'string' && self.options.content.text.length > 0)
 		|| (self.options.content.text.jquery && self.options.content.text.length > 0))
-			content = self.options.content.text;
+        {
+            content = self.options.content.text;
+        }
 
 		// Use title string for content if present
-		else if(typeof self.elements.target.attr('title') == 'string' && self.elements.target.attr('title').length > 0)
+		else if(typeof self.elements.target.attr('title') === 'string' && self.elements.target.attr('title').length > 0)
 		{
 			content = self.elements.target.attr('title').replace("\\n", '<br />');
 			self.elements.target.attr('title', ''); // Remove title attribute to prevent default tooltip showing
 		}
 
 		// No title is present, use alt attribute instead
-		else if(typeof self.elements.target.attr('alt') == 'string' && self.elements.target.attr('alt').length > 0)
+		else if(typeof self.elements.target.attr('alt') === 'string' && self.elements.target.attr('alt').length > 0)
 		{
 			content = self.elements.target.attr('alt').replace("\\n", '<br />');
 			self.elements.target.attr('alt', ''); // Remove alt attribute to prevent default tooltip showing
@@ -1184,15 +1441,21 @@
 		{
 			content = ' ';
 			$.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.NO_VALID_CONTENT, 'render');
-		};
+		}
 
 		// Set the tooltips content and create title if enabled
-		if(self.options.content.title.text !== false) createTitle.call(self);
+		if(self.options.content.title.text !== false)
+        {
+            createTitle.call(self);
+        }
 		self.updateContent(content);
 
 		// Assign events and toggle tooltip with focus
 		assignEvents.call(self);
-		if(self.options.show.ready === true) self.show();
+		if(self.options.show.ready === true)
+        {
+            self.show();
+        }
 
 		// Retrieve ajax content if provided
 		if(self.options.content.url !== false)
@@ -1201,12 +1464,12 @@
 			data = self.options.content.data;
 			method = self.options.content.method || 'get';
 			self.loadContent(url, data, method);
-		};
+		}
 
 		// Call API method and log event
 		self.onRender.call(self);
 		$.fn.qtip.log.error.call(self, 1, $.fn.qtip.constants.EVENT_RENDERED, 'render');
-	};
+	}
 
 	// Create borders using canvas and VML
 	function createBorder()
@@ -1230,41 +1493,41 @@
 		for(i in coordinates)
 		{
 			// Create shape container
-			containers[i] = '<div rel="'+i+'" style="'+((/Left/).test(i) ? 'left' : 'right') + ':0; ' +
-				'position:absolute; height:'+radius+'px; width:'+radius+'px; overflow:hidden; line-height:0.1px; font-size:1px">';
+			containers[i] = '<div rel="' + i + '" style="' + ((/Left/).test(i) ? 'left' : 'right') + ':0; ' +
+				'position:absolute; height:' + radius + 'px; width:' + radius + 'px; overflow:hidden; line-height:0.1px; font-size:1px">';
 
 			// Canvas is supported
 			if($('<canvas>').get(0).getContext)
-				containers[i] += '<canvas height="'+radius+'" width="'+radius+'" style="vertical-align: top"></canvas>';
+				containers[i] += '<canvas height="' + radius + '" width="' + radius + '" style="vertical-align: top"></canvas>';
 
 			// No canvas, but if it's IE use VML
 			else if($.browser.msie)
 			{
 				size = radius * 2 + 3;
-				containers[i] += '<v:arc stroked="false" fillcolor="'+color+'" startangle="'+coordinates[i][0]+'" endangle="'+coordinates[i][1]+'" ' +
-					'style="width:'+size+'px; height:'+size+'px; margin-top:'+((/bottom/).test(i) ? -2 : -1)+'px; ' +
-					'margin-left:'+((/Right/).test(i) ? coordinates[i][2] - 3.5 : -1)+'px; ' +
+				containers[i] += '<v:arc stroked="false" fillcolor="' + color + '" startangle="' + coordinates[i][0] + '" endangle="' + coordinates[i][1] + '" ' +
+					'style="width:' + size + 'px; height:' + size + 'px; margin-top:' + ((/bottom/).test(i) ? -2 : -1) + 'px; ' +
+					'margin-left:' + ((/Right/).test(i) ? coordinates[i][2] - 3.5 : -1) + 'px; ' +
 					'vertical-align:top; display:inline-block; behavior:url(#default#VML)"></v:arc>';
 
-			};
+			}
 
 			containers[i] += '</div>';
-		};
+		}
 
 		// Create between corners elements
 		betweenWidth = self.getDimensions().width - (Math.max(width, radius) * 2);
-		betweenCorners = '<div class="qtip-betweenCorners" style="height:'+radius+'px; width:'+betweenWidth+'px; ' +
-			'overflow:hidden; background-color:'+color+'; line-height:0.1px; font-size:1px;">';
+		betweenCorners = '<div class="qtip-betweenCorners" style="height:' + radius + 'px; width:' + betweenWidth + 'px; ' +
+			'overflow:hidden; background-color:' + color + '; line-height:0.1px; font-size:1px;">';
 
 		// Create top border container
-		borderTop = '<div class="qtip-borderTop" dir="ltr" style="height:'+radius+'px; ' +
-			'margin-left:'+radius+'px; line-height:0.1px; font-size:1px; padding:0;">' +
+		borderTop = '<div class="qtip-borderTop" dir="ltr" style="height:' + radius + 'px; ' +
+			'margin-left:' + radius + 'px; line-height:0.1px; font-size:1px; padding:0;">' +
 			containers['topLeft'] + containers['topRight'] + betweenCorners;
 		self.elements.wrapper.prepend(borderTop);
 
 		// Create bottom border container
-		borderBottom = '<div class="qtip-borderBottom" dir="ltr" style="height:'+radius+'px; ' +
-			'margin-left:'+radius+'px; line-height:0.1px; font-size:1px; padding:0;">' +
+		borderBottom = '<div class="qtip-borderBottom" dir="ltr" style="height:' + radius + 'px; ' +
+			'margin-left:' + radius + 'px; line-height:0.1px; font-size:1px; padding:0;">' +
 			containers['bottomLeft'] + containers['bottomRight'] + betweenCorners;
 		self.elements.wrapper.append(borderBottom);
 
@@ -1279,16 +1542,19 @@
 		}
 
 		// Create a phantom VML element (IE won't show the last created VML element otherwise)
-		else if($.browser.msie) self.elements.tooltip.append('<v:image style="behavior:url(#default#VML);"></v:image>');
+		else if($.browser.msie)
+        {
+            self.elements.tooltip.append('<v:image style="behavior:url(#default#VML);"></v:image>');
+        }
 
 		// Setup contentWrapper border
-		sideWidth = Math.max(radius, (radius + (width - radius)) )
+		sideWidth = Math.max(radius, (radius + (width - radius)) );
 		vertWidth = Math.max(width - radius, 0);
 		self.elements.contentWrapper.css({
 			border: '0px solid ' + color,
 			borderWidth: vertWidth + 'px ' + sideWidth + 'px'
-		})
-	};
+		});
+	}
 
 	// Border canvas draw method
 	function drawBorder(canvas, coordinates, radius, color)
@@ -1299,7 +1565,7 @@
 		context.beginPath();
 		context.arc(coordinates[0], coordinates[1], radius, 0, Math.PI * 2, false);
 		context.fill();
-	};
+	}
 
 	// Create tip using canvas and VML
 	function createTip(corner)
@@ -1328,7 +1594,9 @@
 
 		// Use canvas element if supported
 		if($('<canvas>').get(0).getContext)
-			tip = '<canvas height="'+self.options.style.tip.size.height+'" width="'+self.options.style.tip.size.width+'"></canvas>';
+        {
+            tip = '<canvas height="'+self.options.style.tip.size.height+'" width="'+self.options.style.tip.size.width+'"></canvas>';
+        }
 
 		// Canvas not supported - Use VML (IE)
 		else if($.browser.msie)
@@ -1351,7 +1619,7 @@
 
 			// Prevent tooltip appearing above the content (IE z-index bug)
 			self.elements.contentWrapper.css('position', 'relative');
-		};
+		}
 
 		// Create element reference and append vml/canvas
 		self.elements.tip = self.elements.tooltip.find('.'+self.options.style.classes.tip).eq(0);
@@ -1359,15 +1627,13 @@
 
 		// Draw the canvas tip (Delayed til after DOM creation)
 		if($('<canvas>').get(0).getContext)
-			drawTip.call(self, self.elements.tip.find('canvas:first'), coordinates, color);
-
-		// Fix IE small tip bug
-		if((/top/).test(corner) && $.browser.msie && parseInt($.browser.version.charAt(0)) === 6)
-			self.elements.tip.css({ marginTop: -4 });
+        {
+            drawTip.call(self, self.elements.tip.find('canvas:first'), coordinates, color);
+        }
 
 		// Set the tip position
 		positionTip.call(self, corner);
-	};
+	}
 
 	// Canvas tip drawing method
 	function drawTip(canvas, coordinates, color)
@@ -1382,16 +1648,19 @@
 		context.lineTo(coordinates[1][0], coordinates[1][1]);
 		context.lineTo(coordinates[2][0], coordinates[2][1]);
 		context.fill();
-	};
+	}
 
 	function positionTip(corner)
 	{
-		var self, ieAdjust, paddingCorner, paddingSize, newMargin;
+		var self, ieAdjust, positionAdjust, paddingCorner, paddingSize;
 		self = this;
 
 		// Return if tips are disabled or tip is not yet rendered
-		if(self.options.style.tip.corner === false || !self.elements.tip) return;
-		if(!corner) corner = self.elements.tip.attr('rel');
+		if (self.options.style.tip.corner === false || !self.elements.tip) return;
+		if (!corner)
+        {
+            corner = self.elements.tip.attr('rel');
+        }
 
 		// Setup adjustment variables
 		ieAdjust = positionAdjust = ($.browser.msie) ? 1 : 0;
@@ -1402,50 +1671,69 @@
 		// Set position of tip to correct side
 		if((/top|bottom/).test(corner))
 		{
-			// Adjustments for IE6 - 0.5px border gap bug
+			// Adjustments for IE
 			if($.browser.msie)
 			{
-				if(parseInt($.browser.version.charAt(0)) === 6)
-					positionAdjust = ((/top/).test(corner)) ? -3 : 1;
-				else
-					positionAdjust = ((/top/).test(corner)) ? 1 : 2;
-			};
+                positionAdjust = ((/top/).test(corner)) ? 1 : 2;
+			}
 
-			if((/Middle/).test(corner))
+			if ((/Middle/).test(corner))
+            {
 				self.elements.tip.css({ left: '50%', marginLeft: -(self.options.style.tip.size.width / 2) });
+            }
 
 			else if((/Left/).test(corner))
-				self.elements.tip.css({ left: self.options.style.border.radius - ieAdjust });
+            {
+                self.elements.tip.css({ left: self.options.style.border.radius - ieAdjust });
+            }
 
 			else if((/Right/).test(corner))
-				self.elements.tip.css({ right: self.options.style.border.radius + ieAdjust });
+            {
+                self.elements.tip.css({ right: self.options.style.border.radius + ieAdjust });
+            }
 
 			if((/top/).test(corner))
-				self.elements.tip.css({ top: -positionAdjust });
+            {
+                self.elements.tip.css({ top: -positionAdjust });
+            }
 			else
-				self.elements.tip.css({ bottom: positionAdjust });
+            {
+                self.elements.tip.css({ bottom: positionAdjust });
+            }
 
 		}
 		else if((/left|right/).test(corner))
 		{
-			// Adjustments for IE6 - 0.5px border gap bug
+			// Adjustments for IE
 			if($.browser.msie)
-				positionAdjust = (parseInt($.browser.version.charAt(0)) === 6) ? 1 : ((/left/).test(corner) ? 1 : 2);
+            {
+                positionAdjust = ((/left/).test(corner) ? 1 : 2);
+            }
 
 			if((/Middle/).test(corner))
-				self.elements.tip.css({ top: '50%', marginTop: -(self.options.style.tip.size.height / 2) });
+            {
+                self.elements.tip.css({ top: '50%', marginTop: -(self.options.style.tip.size.height / 2) });
+            }
 
 			else if((/Top/).test(corner))
-				self.elements.tip.css({ top: self.options.style.border.radius - ieAdjust });
+            {
+                self.elements.tip.css({ top: self.options.style.border.radius - ieAdjust });
+            }
 
 			else if((/Bottom/).test(corner))
-				self.elements.tip.css({ bottom: self.options.style.border.radius + ieAdjust });
+            {
+                self.elements.tip.css({ bottom: self.options.style.border.radius + ieAdjust });
+            }
 
 			if((/left/).test(corner))
-				self.elements.tip.css({ left: -positionAdjust });
+            {
+                self.elements.tip.css({ left: -positionAdjust });
+            }
 			else
-				self.elements.tip.css({ right: positionAdjust });
-		};
+            {
+                self.elements.tip.css({ right: positionAdjust });
+            }
+		}
 
 		// Adjust tooltip padding to compensate for tip
 		paddingCorner = 'padding-' + corner.match(/left|right|top|bottom/)[0];
@@ -1453,15 +1741,7 @@
 		self.elements.tooltip.css('padding', 0);
 		self.elements.tooltip.css(paddingCorner, paddingSize);
 
-		// Match content margin to prevent gap bug in IE6 ONLY
-		if($.browser.msie && parseInt($.browser.version.charAt(0)) == 6)
-		{
-			newMargin = parseInt(self.elements.tip.css('margin-top')) || 0;
-			newMargin += parseInt(self.elements.content.css('margin-top')) || 0;
-
-			self.elements.tip.css({ marginTop: newMargin });
-		};
-	};
+	}
 
 	// Create title bar for content
 	function createTitle()
@@ -1469,7 +1749,10 @@
 		var self = this;
 
 		// Destroy previous title element, if present
-		if(self.elements.title !== null) self.elements.title.remove();
+		if(self.elements.title !== null)
+        {
+            self.elements.title.remove();
+        }
 
 		// Create title element
 		self.elements.title = $('<div class="'+self.options.style.classes.title+'">')
@@ -1478,19 +1761,28 @@
 			.prependTo(self.elements.contentWrapper);
 
 		// Update title with contents if enabled
-		if(self.options.content.title.text) self.updateTitle.call(self, self.options.content.title.text);
+		if(self.options.content.title.text)
+        {
+            self.updateTitle.call(self, self.options.content.title.text);
+        }
 
 		// Create title close buttons if enabled
 		if(self.options.content.title.button !== false
-		&& typeof self.options.content.title.button == 'string')
+		&& typeof self.options.content.title.button === 'string')
 		{
 			self.elements.button = $('<a class="'+self.options.style.classes.button+'" style="float:right; position: relative"></a>')
 				.css( jQueryStyle(self.options.style.button, true) )
 				.html(self.options.content.title.button)
 				.prependTo(self.elements.title)
-				.click(function(event){ if(!self.status.disabled) self.hide(event) });
-		};
-	};
+				.click(function (event)
+                {
+                    if (!self.status.disabled)
+                    {
+                        self.hide(event);
+                    }
+                });
+		}
+	}
 
 	// Assign hide and show events
 	function assignEvents()
@@ -1503,10 +1795,13 @@
 		hideTarget = self.options.hide.when.target;
 
 		// Add tooltip as a hideTarget is its fixed
-		if(self.options.hide.fixed) hideTarget = hideTarget.add(self.elements.tooltip);
+		if(self.options.hide.fixed)
+        {
+            hideTarget = hideTarget.add(self.elements.tooltip);
+        }
 
 		// Check if the hide event is special 'inactive' type
-		if(self.options.hide.when.event == 'inactive')
+		if(self.options.hide.when.event === 'inactive')
 		{
 			// Define events which reset the 'inactive' event handler
 			inactiveEvents = ['click', 'dblclick', 'mousedown', 'mouseup', 'mousemove',
@@ -1532,7 +1827,7 @@
 					self.hide(event);
 				}
 				, self.options.hide.delay);
-			};
+			}
 		}
 
 		// Check if the tooltip is 'fixed'
@@ -1545,7 +1840,7 @@
 				// Reset the hide timer
 				clearTimeout(self.timers.hide);
 			});
-		};
+		}
 
 		// Define show event method
 		function showMethod(event)
@@ -1553,7 +1848,7 @@
 			if(self.status.disabled === true) return;
 
 			// If set, hide tooltip when inactive for delay period
-			if(self.options.hide.when.event == 'inactive')
+			if(self.options.hide.when.event === 'inactive')
 			{
 				// Assign each reset event
 				$(inactiveEvents).each(function()
@@ -1564,20 +1859,26 @@
 
 				// Start the inactive timer
 				inactiveMethod();
-			};
+			}
 
 			// Clear hide timers
 			clearTimeout(self.timers.show);
 			clearTimeout(self.timers.hide);
 
 			// Start show timer
-			if(self.options.show.delay > 0) {
-				self.timers.show = setTimeout(function(){ self.show(event); }, self.options.show.delay);
+			if(self.options.show.delay > 0)
+            {
+				self.timers.show = setTimeout(function ()
+                {
+                    self.show(event);
+                }
+                , self.options.show.delay);
 			}
-			else {
+			else
+            {
 				self.show(event);
 			}
-		};
+		}
 
 		// Define hide event method
 		function hideMethod(event)
@@ -1596,7 +1897,7 @@
 				// Reset the hide timer
 				clearTimeout(self.timers.hide);
 				return false;
-			};
+			}
 
 			// Clear timers and stop animation queue
 			clearTimeout(self.timers.show);
@@ -1604,8 +1905,12 @@
 			self.elements.tooltip.stop(true, true);
 
 			// If tooltip has displayed, start hide timer
-			self.timers.hide = setTimeout(function(){ self.hide(event); }, self.options.hide.delay);
-		};
+			self.timers.hide = setTimeout(function ()
+            {
+                self.hide(event);
+            }
+            , self.options.hide.delay);
+		}
 
 		// Both events and targets are identical, apply events using a toggle
 		if((self.options.show.when.target.add(self.options.hide.when.target).length === 1
@@ -1617,7 +1922,10 @@
 			// Use a toggle to prevent hide/show conflicts
 			showTarget.bind(self.options.show.when.event + '.qtip', function(event)
 			{
-				if(self.cache.toggle == 0) showMethod(event);
+				if (self.cache.toggle == 0)
+                {
+                    showMethod(event);
+                }
 				else hideMethod(event);
 			});
 		}
@@ -1629,12 +1937,16 @@
 
 			// If the hide event is not 'inactive', bind the hide method
 			if(self.options.hide.when.event !== 'inactive')
-				hideTarget.bind(self.options.hide.when.event + '.qtip', hideMethod);
-		};
+            {
+                hideTarget.bind(self.options.hide.when.event + '.qtip', hideMethod);
+            }
+		}
 
 		// Focus the tooltip on mouseover
 		if((/(fixed|absolute)/).test(self.options.position.type))
-			self.elements.tooltip.bind('mouseover.qtip', self.focus);
+        {
+            self.elements.tooltip.bind('mouseover.qtip', self.focus);
+        }
 
 		// If mouse is the target, update tooltip position on mousemove
 		if(self.options.position.target === 'mouse' && self.options.position.type !== 'static')
@@ -1649,19 +1961,21 @@
 				&& self.options.position.adjust.mouse === true
 				&& self.options.position.type !== 'static'
 				&& self.elements.tooltip.css('display') !== 'none')
+                {
 					self.updatePosition(event);
+                }
 			});
-		};
-	};
+		}
+	}
 
 	// Screen position adjustment
 	function screenAdjust(position, target, tooltip)
 	{
-		var self, adjustedPosition, adjust, newCorner, overflow, corner;
+		var self, adjustedPosition, adjust, newCorner, overflow;
 		self = this;
 
 		// Setup corner and adjustment variable
-		if(tooltip.corner == 'center') return target.position // TODO: 'center' corner adjustment
+		if(tooltip.corner === 'center') return target.position; // TODO: 'center' corner adjustment
 		adjustedPosition = $.extend({}, position);
 		newCorner = { x: false, y: false };
 
@@ -1685,9 +1999,13 @@
 		if(adjust.left)
 		{
 			if(self.options.position.target !== 'mouse')
-				adjustedPosition.left = target.position.left + target.dimensions.width;
+            {
+                adjustedPosition.left = target.position.left + target.dimensions.width;
+            }
 			else
-				adjustedPosition.left = self.cache.mouse.x
+            {
+                adjustedPosition.left = self.cache.mouse.x;
+            }
 
 			newCorner.x = 'Left';
 		}
@@ -1696,20 +2014,28 @@
 		else if(adjust.right)
 		{
 			if(self.options.position.target !== 'mouse')
-				adjustedPosition.left = target.position.left - tooltip.dimensions.width;
+            {
+                adjustedPosition.left = target.position.left - tooltip.dimensions.width;
+            }
 			else
-				adjustedPosition.left = self.cache.mouse.x - tooltip.dimensions.width;
+            {
+                adjustedPosition.left = self.cache.mouse.x - tooltip.dimensions.width;
+            }
 
 			newCorner.x = 'Right';
-		};
+		}
 
 		// Tooltip overflows off the top of the screen
 		if(adjust.top)
 		{
 			if(self.options.position.target !== 'mouse')
-				adjustedPosition.top = target.position.top + target.dimensions.height;
+            {
+                adjustedPosition.top = target.position.top + target.dimensions.height;
+            }
 			else
-				adjustedPosition.top = self.cache.mouse.y
+            {
+                adjustedPosition.top = self.cache.mouse.y;
+            }
 
 			newCorner.y = 'top';
 		}
@@ -1718,44 +2044,58 @@
 		else if(adjust.bottom)
 		{
 			if(self.options.position.target !== 'mouse')
-				adjustedPosition.top = target.position.top - tooltip.dimensions.height;
+            {
+                adjustedPosition.top = target.position.top - tooltip.dimensions.height;
+            }
 			else
-				adjustedPosition.top = self.cache.mouse.y - tooltip.dimensions.height;
+            {
+                adjustedPosition.top = self.cache.mouse.y - tooltip.dimensions.height;
+            }
 
 			newCorner.y = 'bottom';
-		};
+		}
 
 		// Don't adjust if resulting position is negative
 		if(adjustedPosition.left < 0)
 		{
 			adjustedPosition.left = position.left;
 			newCorner.x = false;
-		};
+		}
 		if(adjustedPosition.top < 0)
 		{
 			adjustedPosition.top = position.top;
 			newCorner.y = false;
-		};
+		}
 
 		// Change tip corner if positioning has changed and tips are enabled
 		if(self.options.style.tip.corner !== false)
 		{
 			// Determine new corner properties
 			adjustedPosition.corner = new String(tooltip.corner);
-			if (adjustedPosition.corner.match(/^(right|left)/)) {
+			if (adjustedPosition.corner.match(/^(right|left)/))
+            {
 				if(newCorner.x !== false) adjustedPosition.corner = adjustedPosition.corner.replace(/(left|right)/, newCorner.x.toLowerCase());
-			} else {
-				if(newCorner.x !== false) adjustedPosition.corner = adjustedPosition.corner.replace(/Left|Right|Middle/, newCorner.x);
-				if(newCorner.y !== false) adjustedPosition.corner = adjustedPosition.corner.replace(/top|bottom/, newCorner.y);
+			} else
+            {
+				if(newCorner.x !== false)
+                {
+                    adjustedPosition.corner = adjustedPosition.corner.replace(/Left|Right|Middle/, newCorner.x);
+                }
+				if(newCorner.y !== false)
+                {
+                    adjustedPosition.corner = adjustedPosition.corner.replace(/top|bottom/, newCorner.y);
+                }
 			}
 
 			// Adjust tip if position has changed and tips are enabled
 			if(adjustedPosition.corner !== self.elements.tip.attr('rel'))
-				createTip.call(self, adjustedPosition.corner);
-		};
+            {
+                createTip.call(self, adjustedPosition.corner);
+            }
+		}
 
 		return adjustedPosition;
-	};
+	}
 
 	// Build a jQuery style object from supplied style object
 	function jQueryStyle(style, sub)
@@ -1766,13 +2106,17 @@
 		for(i in styleObj)
 		{
 			if(sub === true && (/(tip|classes)/i).test(i))
-				delete styleObj[i];
+            {
+                delete styleObj[i];
+            }
 			else if(!sub && (/(width|border|tip|title|classes|user)/i).test(i))
-				delete styleObj[i];
-		};
+            {
+                delete styleObj[i];
+            }
+		}
 
 		return styleObj;
-	};
+	}
 
 	// Sanitize styles
 	function sanitizeStyle(style)
@@ -1781,42 +2125,44 @@
 		if(typeof style.tip.size !== 'object') style.tip.size = { width: style.tip.size, height: style.tip.size };
 		if(typeof style.border !== 'object') style.border = { width: style.border };
 		if(typeof style.width !== 'object') style.width = { value: style.width };
-		if(typeof style.width.max == 'string') style.width.max = parseInt(style.width.max.replace(/([0-9]+)/i, "$1"));
-		if(typeof style.width.min == 'string') style.width.min = parseInt(style.width.min.replace(/([0-9]+)/i, "$1"));
+		if(typeof style.width.max === 'string') style.width.max = parseInt(style.width.max.replace(/([0-9]+)/i, "$1"));
+		if(typeof style.width.min === 'string') style.width.min = parseInt(style.width.min.replace(/([0-9]+)/i, "$1"));
 
 		// Convert deprecated x and y tip values to width/height
-		if(typeof style.tip.size.x == 'number')
+		if(typeof style.tip.size.x === 'number')
 		{
 			style.tip.size.width = style.tip.size.x;
 			delete style.tip.size.x;
-		};
-		if(typeof style.tip.size.y == 'number')
+		}
+		if(typeof style.tip.size.y === 'number')
 		{
 			style.tip.size.height = style.tip.size.y;
 			delete style.tip.size.y;
-		};
+		}
 
 		return style;
-	};
+	}
 
 	// Build styles recursively with inheritance
 	function buildStyle()
 	{
-		var self, i, styleArray, styleExtend, finalStyle, ieAdjust;
+		var self, i, l, styleArray, styleExtend, finalStyle, ieAdjust;
 		self = this;
 
 		// Build style options from supplied arguments
 		styleArray = [true, {}];
-		for(i = 0; i < arguments.length; i++)
-			styleArray.push(arguments[i]);
+		for(i = 0, l = arguments.length; i < l; i++)
+        {
+            styleArray.push(arguments[i]);
+        }
 		styleExtend = [ $.extend.apply($, styleArray) ];
 
 		// Loop through each named style inheritance
-		while(typeof styleExtend[0].name == 'string')
+		while(typeof styleExtend[0].name === 'string')
 		{
 			// Sanitize style data and append to extend array
 			styleExtend.unshift( sanitizeStyle($.fn.qtip.styles[ styleExtend[0].name ]) );
-		};
+		}
 
 		// Make sure resulting tooltip className represents final style
 		styleExtend.unshift(true, {classes:{ tooltip: 'qtip-' + (arguments[0].name || 'defaults') }}, $.fn.qtip.styles.defaults);
@@ -1835,10 +2181,12 @@
 
 		// Sanitize final styles tip corner value
 		if(finalStyle.tip.corner === true)
-			finalStyle.tip.corner = (self.options.position.corner.tooltip === 'center') ? false : self.options.position.corner.tooltip;
+        {
+            finalStyle.tip.corner = (self.options.position.corner.tooltip === 'center') ? false : self.options.position.corner.tooltip;
+        }
 
 		return finalStyle;
-	};
+	}
 
 	// Tip coordinates calculator
 	function calculateTip(corner, width, height)
@@ -1860,7 +2208,7 @@
 		tips.rightBottom = tips.topLeft;
 
 		return tips[corner];
-	};
+	}
 
 	// Border coordinates calculator
 	function calculateBorders(radius)
@@ -1883,10 +2231,10 @@
 				topLeft: [-90,90,0], topRight: [-90,90,-radius],
 				bottomLeft: [90,270,0], bottomRight: [90, 270,-radius]
 			};
-		};
+		}
 
 		return borders;
-	};
+	}
 
 	// BGIFRAME JQUERY PLUGIN ADAPTION
 	//   Special thanks to Brandon Aaron for this plugin
@@ -1904,37 +2252,40 @@
 
 		// Append the new HTML and setup element reference
 		self.elements.bgiframe = self.elements.wrapper.prepend(html).children('.qtip-bgiframe:first');
-	};
+	}
 
 	// Assign cache and event initialisation on document load
 	$(document).ready(function()
 	{
+        var $win = $(window);
 		// Setup library cache with window scroll and dimensions of document
 		$.fn.qtip.cache = {
 			screen: {
-				scroll: { left: $(window).scrollLeft(), top: $(window).scrollTop() },
-				width: $(window).width(),
-				height: $(window).height()
+				scroll: { left: $win.scrollLeft(), top: $win.scrollTop() },
+				width: $win.width(),
+				height: $win.height()
 			}
 		};
 
 		// Adjust positions of the tooltips on window resize or scroll if enabled
 		var adjustTimer;
-		$(window).bind('resize scroll', function(event)
+        $win.bind('resize scroll', function(event)
 		{
 			clearTimeout(adjustTimer);
 			adjustTimer = setTimeout(function()
 			{
 				// Readjust cached screen values
 				if(event.type === 'scroll')
-					$.fn.qtip.cache.screen.scroll = { left: $(window).scrollLeft(), top: $(window).scrollTop() };
+                {
+                    $.fn.qtip.cache.screen.scroll = { left: $(window).scrollLeft(), top: $(window).scrollTop() };
+                }
 				else
 				{
 					$.fn.qtip.cache.screen.width = $(window).width();
 					$.fn.qtip.cache.screen.height = $(window).height();
-				};
+				}
 
-				for(i = 0; i < $.fn.qtip.interfaces.length; i++)
+				for(var i = 0, l = $.fn.qtip.interfaces.length; i < l; i++)
 				{
 					// Access current elements API
 					var api = $.fn.qtip.interfaces[i];
@@ -1947,10 +2298,10 @@
 						// Queue the animation so positions are updated correctly
 						api.updatePosition(event, true);
 					}
-				};
+				}
 			}
 			, 100);
-		})
+		});
  
 		// Hide unfocus toolipts on document mousedown
 		$(document).bind('touchstart.qtip', function(event)
@@ -1964,10 +2315,12 @@
 					// Only hide if its visible and not the tooltips target
 					if($(this).is(':visible') && !api.status.disabled
 					&& $(event.target).add(api.elements.target).length > 1)
-						api.hide(event);
+                    {
+                        api.hide(event);
+                    }
 				})
-			};
-		})
+			}
+		});
 		
 		
 		$(document).bind('mousedown.qtip', function(event)
@@ -1981,14 +2334,16 @@
 					// Only hide if its visible and not the tooltips target
 					if($(this).is(':visible') && !api.status.disabled
 					&& $(event.target).add(api.elements.target).length > 1)
-						api.hide(event);
+                    {
+                        api.hide(event);
+                    }
 				})
-			};
-		})
+			}
+		});
 	});
 
 	// Define qTip API interfaces array
-	$.fn.qtip.interfaces = []
+	$.fn.qtip.interfaces = [];
 
 	// Define log and constant place holders
 	$.fn.qtip.log = { error: function(){ return this; } };
