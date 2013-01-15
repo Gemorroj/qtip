@@ -977,7 +977,7 @@
                             var preloaded = $('body > img[src="' + $t.attr('src') + '"]:first');
                             if (preloaded.length > 0)
                             {
-                                $t.attr('width', preloaded.innerWidth()).attr('height', preloaded.innerHeight());
+                                $t.width(preloaded.innerWidth()).height(preloaded.innerHeight());
                             }
                         });
                         afterLoad();
@@ -1916,7 +1916,7 @@
         }
 
         // Both events and targets are identical, apply events using a toggle
-        if((self.options.show.when.target.add(self.options.hide.when.target).length === 1 && self.options.show.when.event == self.options.hide.when.event && self.options.hide.when.event !== 'inactive') || self.options.hide.when.event == 'unfocus')
+        if((self.options.show.when.target.add(self.options.hide.when.target).length === 1 && self.options.show.when.event == self.options.hide.when.event && self.options.hide.when.event !== 'inactive') || self.options.hide.when.event === 'unfocus')
         {
             self.cache.toggle = 0;
             // Use a toggle to prevent hide/show conflicts
